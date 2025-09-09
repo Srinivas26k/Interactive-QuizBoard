@@ -45,22 +45,6 @@ This platform implements **Artificial Intelligence for Personalized Learning** a
 - **🔍 Explainable AI**: Transparent reasoning behind content recommendations
 - **🔄 Real-time Adaptation**: Instant adjustments based on learner behavior
 
-## 📸 Screenshots
-
-> Note: Actual screenshots would be placed in the `screenshots/` directory
-
-### Home Page
-![Home Page](screenshots/home.png)
-
-### Quiz Interface
-![Quiz Page](screenshots/quiz.png)
-
-### Results & Recommendations
-![Results Page](screenshots/results.png)
-
-### Teacher Dashboard
-![Teacher Dashboard](screenshots/dashboard.png)
-
 ## 🛠️ Technology Stack
 
 ### Core Technologies
@@ -294,11 +278,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [scikit-learn](https://scikit-learn.org/) for ML algorithms
 - [Plotly](https://plotly.com/) for interactive charts
 - [Pandas](https://pandas.pydata.org/) for data manipulation
-
-## 📞 Contact
-
-For academic inquiries about this project implementation, please contact the developer.
-
----
-
-**Note**: This implementation successfully addresses all core requirements from the "AI in Personalized Learning" academic project, including adaptive content delivery, learner profiling, performance tracking, and explainable AI recommendations.
