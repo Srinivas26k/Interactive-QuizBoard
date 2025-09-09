@@ -210,8 +210,11 @@ def show_quiz_page(questions_df, logger):
             if st.button("✅ Submit Answer", disabled=not user_answer.strip()):
                 # Record answer
                 response_time = time.time() - st.session_state.start_times[question_id]
-                # Simple correctness check (you can make this more sophisticated)
-                correct = len(user_answer.strip()) > 0  # Simplified check
+                # Get the correct answer from the questions dataframe
+                correct_answer = question_row.get('answer', '')
+                # Use the validate_answer function for proper checking
+                from utils import validate_answer
+                correct = validate_answer(user_answer.strip(), correct_answer, question_row.get('type', 'text'))
                 
                 st.session_state.answers[question_id] = {
                     'answer': user_answer.strip(),
@@ -278,7 +281,7 @@ def show_results_page(students_df, questions_df, profile_manager, recommender):
     skipped_questions = sum(1 for a in answers.values() if a['skipped'])
     accuracy = correct_answers / total_questions if total_questions > 0 else 0
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric("Questions Answered", total_questions)
@@ -293,6 +296,18 @@ def show_results_page(students_df, questions_df, profile_manager, recommender):
         engagement = 1 - (skipped_questions / total_questions)
         st.metric("Avg Response Time", f"{avg_time:.1f}s")
         st.metric("Engagement Score", f"{engagement:.1%}")
+    
+    with col4:
+        # Gamification elements
+        points = int(correct_answers * 10 + (total_questions - skipped_questions) * 5)
+        level = min(10, max(1, int(points / 50) + 1))
+        st.metric(".Points Earned", f"{points}")
+        st.metric("Level", f"{level}/10")
+        
+        # Progress bar for next level
+        progress_to_next = (points % 50) / 50
+        st.progress(progress_to_next)
+        st.caption(f"{int(progress_to_next * 100)}% to next level")
     
     # Update profile
     profile_manager.update_profile(student_id, answers)
@@ -320,6 +335,10 @@ def show_results_page(students_df, questions_df, profile_manager, recommender):
                 st.write(f"**Difficulty:** {'⭐' * rec['difficulty']}")
                 st.write(f"**Question:** {rec['text']}")
                 st.write(f"**Hint:** {rec['hint']}")
+                
+                # Show explanation for why this recommendation was made
+                if 'explanation' in rec:
+                    st.info(f"**Why this recommendation?** {rec['explanation']}")
     
     # Generate feedback
     st.subheader("💬 Personalized Feedback")
@@ -429,6 +448,19 @@ def show_teacher_dashboard():
                     st.metric("Engagement", f"{student['Avg Engagement']:.1%}")
                 with col3:
                     st.metric("Quiz Attempts", int(student['Quiz Count']))
+                
+                # Provide AI recommendations for teachers
+                st.info("🤖 AI Recommendation for this student:")
+                if student['Avg Accuracy'] < 0.3:
+                    st.write("• This student is significantly struggling and needs immediate intervention")
+                    st.write("• Recommend one-on-one tutoring sessions")
+                    st.write("• Provide simplified materials with visual aids")
+                    st.write("• Schedule frequent check-ins and progress monitoring")
+                elif student['Avg Accuracy'] < 0.5:
+                    st.write("• This student needs additional support with foundational concepts")
+                    st.write("• Suggest guided practice with immediate feedback")
+                    st.write("• Offer alternative learning formats (videos, interactive content)")
+                    st.write("• Plan a review session on core topics")
     else:
         st.success("🎉 All students are performing well!")
     

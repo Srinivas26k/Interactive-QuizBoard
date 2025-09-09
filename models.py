@@ -143,18 +143,23 @@ class ContentRecommender:
     
     def get_recommendations(self, student_id: str, profile: Dict[str, float], 
                           questions_df: pd.DataFrame, num_recommendations: int = 3) -> List[Dict]:
-        """Get personalized content recommendations"""
+        """Get personalized content recommendations with explanations"""
         if questions_df.empty:
             return []
         
         try:
             # Rule-based recommendations based on accuracy
             accuracy = profile.get('accuracy', 0.0)
+            engagement = profile.get('engagement', 0.0)
+            pace = profile.get('pace', 0.0)
             
             recommendations = []
             
             if accuracy < 0.6:
-                # Student needs remedial content
+                # Student needs remedial content - Scenario 1 from project doc
+                explanation = f"Based on your {accuracy:.1%} accuracy, the system has identified that you need additional support with foundational concepts. "
+                explanation += "This recommendation provides simplified content with visual aids and guided practice to help reinforce basic skills."
+                
                 remedial_questions = questions_df[questions_df['difficulty'] <= 2].copy()
                 if not remedial_questions.empty:
                     # Add one remedial question
@@ -165,7 +170,8 @@ class ContentRecommender:
                         'topic': rec['topic'],
                         'difficulty': rec['difficulty'],
                         'text': rec['text'],
-                        'hint': rec['hint']
+                        'hint': rec['hint'],
+                        'explanation': explanation
                     })
                 
                 # Add practice questions
@@ -173,17 +179,23 @@ class ContentRecommender:
                 if not practice_questions.empty:
                     n_practice = min(2, len(practice_questions))
                     for _, rec in practice_questions.sample(n=n_practice).iterrows():
+                        explanation = f"This practice question reinforces basic concepts you've been working on. "
+                        explanation += "Since your accuracy is {accuracy:.1%}, extra practice with fundamentals will help build confidence."
                         recommendations.append({
                             'type': 'practice',
                             'question_id': rec['question_id'],
                             'topic': rec['topic'],
                             'difficulty': rec['difficulty'],
                             'text': rec['text'],
-                            'hint': rec['hint']
+                            'hint': rec['hint'],
+                            'explanation': explanation
                         })
             
             elif 0.6 <= accuracy <= 0.85:
                 # Student needs practice and some challenge
+                explanation = f"With {accuracy:.1%} accuracy, you're showing solid understanding but can still improve. "
+                explanation += "This content balances practice with challenges to help you advance."
+                
                 practice_questions = questions_df[questions_df['difficulty'] == 2].copy()
                 challenge_questions = questions_df[questions_df['difficulty'] >= 3].copy()
                 
@@ -191,41 +203,53 @@ class ContentRecommender:
                 if not practice_questions.empty:
                     n_practice = min(2, len(practice_questions))
                     for _, rec in practice_questions.sample(n=n_practice).iterrows():
+                        explanation = f"This practice question reinforces your current skill level. "
+                        explanation += "Balanced practice with questions at your level helps maintain and improve your {accuracy:.1%} accuracy."
                         recommendations.append({
                             'type': 'practice',
                             'question_id': rec['question_id'],
                             'topic': rec['topic'],
                             'difficulty': rec['difficulty'],
                             'text': rec['text'],
-                            'hint': rec['hint']
+                            'hint': rec['hint'],
+                            'explanation': explanation
                         })
                 
                 # Add one challenge question
                 if not challenge_questions.empty:
                     rec = challenge_questions.sample(n=1).iloc[0]
+                    explanation = f"This challenge question is designed to stretch your abilities. "
+                    explanation += "With {accuracy:.1%} accuracy, you're ready to tackle more complex problems."
                     recommendations.append({
                         'type': 'challenge',
                         'question_id': rec['question_id'],
                         'topic': rec['topic'],
                         'difficulty': rec['difficulty'],
                         'text': rec['text'],
-                        'hint': rec['hint']
+                        'hint': rec['hint'],
+                        'explanation': explanation
                     })
             
             else:
-                # High-performing student needs challenging content
+                # High-performing student needs challenging content - Scenario 2 from project doc
+                explanation = f"Excellent work! With {accuracy:.1%} accuracy, you're identified as an advanced learner. "
+                explanation += "This recommendation skips remedial content and offers challenging, case study-based activities to keep you engaged."
+                
                 challenge_questions = questions_df[questions_df['difficulty'] >= 3].copy()
                 
                 if not challenge_questions.empty:
                     n_challenge = min(3, len(challenge_questions))
                     for _, rec in challenge_questions.sample(n=n_challenge).iterrows():
+                        explanation = f"As an advanced learner with {accuracy:.1%} accuracy, this challenge question is designed to deepen your understanding. "
+                        explanation += "It goes beyond basic concepts to encourage creative thinking and application."
                         recommendations.append({
                             'type': 'challenge',
                             'question_id': rec['question_id'],
                             'topic': rec['topic'],
                             'difficulty': rec['difficulty'],
                             'text': rec['text'],
-                            'hint': rec['hint']
+                            'hint': rec['hint'],
+                            'explanation': explanation
                         })
             
             # Ensure we have exactly the requested number of recommendations
@@ -237,13 +261,15 @@ class ContentRecommender:
                 
                 if not available_questions.empty:
                     for _, rec in available_questions.sample(n=min(remaining, len(available_questions))).iterrows():
+                        explanation = f"This additional question complements your learning path based on your {accuracy:.1%} accuracy and {engagement:.1%} engagement."
                         recommendations.append({
                             'type': 'additional',
                             'question_id': rec['question_id'],
                             'topic': rec['topic'],
                             'difficulty': rec['difficulty'],
                             'text': rec['text'],
-                            'hint': rec['hint']
+                            'hint': rec['hint'],
+                            'explanation': explanation
                         })
             
             return recommendations[:num_recommendations]
@@ -259,7 +285,8 @@ class ContentRecommender:
                         'topic': rec['topic'],
                         'difficulty': rec['difficulty'],
                         'text': rec['text'],
-                        'hint': rec['hint']
+                        'hint': rec['hint'],
+                        'explanation': 'Fallback recommendation due to system error'
                     }
                     for _, rec in questions_df.sample(n=min(num_recommendations, len(questions_df))).iterrows()
                 ]

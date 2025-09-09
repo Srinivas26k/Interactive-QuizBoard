@@ -9,47 +9,77 @@ def generate_feedback(accuracy: float, profile: Dict[str, float],
                      student_info: Dict[str, Any]) -> str:
     """Generate personalized feedback based on performance"""
     
-    feedback_templates = {
-        'excellent': [
-            "🌟 Outstanding work, {name}! You're mastering the material with {accuracy:.1%} accuracy. Keep challenging yourself!",
-            "🎯 Excellent performance! Your {accuracy:.1%} accuracy shows strong understanding. Ready for more advanced topics?",
-            "🔥 You're on fire! {accuracy:.1%} accuracy is impressive. Consider exploring enrichment materials."
-        ],
-        'good': [
-            "👍 Good job, {name}! You achieved {accuracy:.1%} accuracy. Focus on the areas you missed to improve further.",
-            "📈 Nice progress! {accuracy:.1%} shows you're learning well. Practice similar problems to strengthen your skills.",
-            "💪 Well done! Your {accuracy:.1%} accuracy is solid. A bit more practice will make you even stronger."
-        ],
-        'needs_improvement': [
-            "🤔 You scored {accuracy:.1%}, {name}. Don't worry - learning takes time! Focus on understanding the basics first.",
-            "📚 {accuracy:.1%} shows you're working hard. Try reviewing the fundamentals and practicing step-by-step solutions.",
-            "🌱 Everyone learns at their own pace. Your {accuracy:.1%} is a starting point. Break down complex problems into smaller steps."
-        ],
-        'struggling': [
-            "💡 {accuracy:.1%} accuracy tells us you need more support, {name}. Consider asking for help with the basics.",
-            "🤝 Learning can be challenging! Your {accuracy:.1%} suggests reviewing foundational concepts would help.",
-            "🎯 Don't give up! {accuracy:.1%} means we need to find the right approach for you. Try different learning strategies."
-        ]
-    }
+    name = student_info.get('name', 'Student')
+    preferred_format = student_info.get('preferred_format', 'text')
     
     # Determine performance category
     if accuracy >= 0.85:
-        category = 'excellent'
+        # High performer - Scenario 2 from project doc
+        feedback = f"🌟 Outstanding work, {name}! 🎯\n\n"
+        feedback += f"You scored {accuracy:.1%} which shows you're an advanced learner. "
+        feedback += "The system has identified you as a fast and curious learner who completes tasks quickly and accurately.\n\n"
+        feedback += "✨ What the AI system recommends for you:\n"
+        feedback += "• Skipping remedial content and unlocking challenge mode\n"
+        feedback += "• Access to case study-based activities\n"
+        feedback += "• Optional debate videos to deepen your knowledge\n"
+        feedback += "• Peer-review writing prompts to encourage creative thinking\n\n"
+        
+        if preferred_format == 'video':
+            feedback += "🎥 Since you prefer videos, we recommend exploring advanced educational content on platforms like Khan Academy.\n"
+        elif preferred_format == 'text':
+            feedback += "📖 You learn well from text - try exploring academic papers and advanced reading materials.\n"
+            
+        feedback += "\n🚀 Keep challenging yourself at your own pace!"
+    
     elif accuracy >= 0.7:
-        category = 'good'
+        # Good performer
+        feedback = f"👍 Good job, {name}!\n\n"
+        feedback += f"You achieved {accuracy:.1%} accuracy, which shows solid understanding.\n\n"
+        feedback += "💡 Recommendations:\n"
+        feedback += "• Continue practicing to strengthen your skills\n"
+        feedback += "• Review any missed questions to understand your mistakes\n"
+        feedback += "• Try mixed problem sets to reinforce learning\n\n"
+        
+        if preferred_format == 'video':
+            feedback += "🎥 Video learners like you might benefit from concept explanation videos.\n"
+        elif preferred_format == 'text':
+            feedback += "📖 Try worked examples and step-by-step solution guides.\n"
+    
     elif accuracy >= 0.5:
-        category = 'needs_improvement'
+        # Needs improvement - Scenario 1 from project doc
+        feedback = f"🤔 You scored {accuracy:.1%}, {name}. That's okay - learning takes time!\n\n"
+        feedback += f"The system has identified that you may be struggling with some concepts. "
+        feedback += "This is completely normal and part of the learning process.\n\n"
+        feedback += "🎯 What the AI system recommends for you:\n"
+        feedback += "• Simplified interactive tutorials with visual aids\n"
+        feedback += "• Guided exercises with hints enabled\n"
+        feedback += "• Real-time feedback to correct mistakes early\n"
+        feedback += "• A recap quiz will be scheduled to reinforce learning\n\n"
+        
+        if preferred_format == 'video':
+            feedback += "🎥 Visual learners like you might benefit from video explanations with diagrams.\n"
+        elif preferred_format == 'text':
+            feedback += "📖 Try breaking down complex problems into smaller steps with text guides.\n"
+            
+        feedback += "\n🌱 Remember: Everyone learns at their own pace. Keep practicing!"
+    
     else:
-        category = 'struggling'
-    
-    # Select random template from category
-    template = random.choice(feedback_templates[category])
-    
-    # Format with student information
-    feedback = template.format(
-        name=student_info.get('name', 'Student'),
-        accuracy=accuracy
-    )
+        # Struggling - Scenario 1 from project doc
+        feedback = f"💡 {accuracy:.1%} accuracy tells us you need more support, {name}.\n\n"
+        feedback += "The system has identified you as a struggling learner who needs additional reinforcement.\n\n"
+        feedback += "🤝 What the AI system will do to help you:\n"
+        feedback += "• Replaces difficult content with simplified interactive tutorials\n"
+        feedback += "• Provides guided exercises with hints enabled\n"
+        feedback += "• Offers real-time feedback to correct mistakes early\n"
+        feedback += "• Schedules a recap quiz to reinforce learning\n"
+        feedback += "• Sends motivational messages to keep you engaged\n\n"
+        
+        if preferred_format == 'video':
+            feedback += "🎥 Visual learning materials can help you understand concepts better.\n"
+        elif preferred_format == 'text':
+            feedback += "📖 Try step-by-step text guides with plenty of examples.\n"
+            
+        feedback += "\n🎯 Don't give up! With the right support, you'll improve. The system will adapt to your needs."
     
     # Add specific recommendations based on profile
     engagement = profile.get('engagement', 0)
@@ -58,19 +88,12 @@ def generate_feedback(accuracy: float, profile: Dict[str, float],
     additional_tips = []
     
     if engagement < 0.7:
-        additional_tips.append("💭 Try not to skip questions - even a guess can help your learning!")
+        additional_tips.append("💭 Try not to skip questions - engaging with every problem helps your learning!")
     
     if pace > 30:
-        additional_tips.append("⏰ Take your time to read questions carefully, but don't overthink simple problems.")
+        additional_tips.append("⏰ Take your time to read questions carefully. Don't rush through problems.")
     elif pace < 10:
-        additional_tips.append("🚀 You're working quickly! Make sure to double-check your answers.")
-    
-    # Add learning style recommendations
-    preferred_format = student_info.get('preferred_format', 'text')
-    if preferred_format == 'video':
-        additional_tips.append("🎥 Since you prefer videos, try Khan Academy or educational YouTube channels!")
-    elif preferred_format == 'text':
-        additional_tips.append("📖 You learn well from text - try worked examples and step-by-step guides!")
+        additional_tips.append("🔍 You're working quickly! Make sure to double-check your answers for accuracy.")
     
     if additional_tips:
         feedback += "\n\n" + " ".join(additional_tips)
@@ -211,7 +234,14 @@ def validate_answer(user_answer: str, expected_answer: str,
         except:
             pass
     
-    # Default to text comparison
+    # For text answers, check if the expected answer is contained in user answer
+    # This allows for more flexible matching (e.g., "x=2 or x=3" should match "x=2" or "x=3")
+    if question_type == 'text':
+        # Split expected answer by "or" or "," to handle multiple correct answers
+        expected_parts = [part.strip() for part in re.split(r'\s*(?:or|,)\s*', expected_clean)]
+        return any(part in user_clean for part in expected_parts)
+    
+    # Default to exact text comparison
     return user_clean == expected_clean
 
 def eval_fraction(fraction_str: str) -> float:
